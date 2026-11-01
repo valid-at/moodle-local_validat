@@ -64,6 +64,7 @@ $string['my_completed'] = 'Completed on {$a}';
 $string['my_holder'] = 'PDF and name display';
 $string['my_intro'] = 'Your certificates are registered on valid.at. Show the code, the QR code on the PDF or the link to the verification page to anyone who wants to check them.';
 $string['my_none'] = 'You have no certificates yet.';
+$string['my_notyet'] = 'Not issued yet';
 $string['my_verify'] = 'Open verification page';
 $string['mycertificates'] = 'My certificates on valid.at';
 $string['note'] = 'Additional text on the PDF';

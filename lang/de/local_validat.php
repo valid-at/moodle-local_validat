@@ -64,6 +64,7 @@ $string['my_completed'] = 'Abgeschlossen am {$a}';
 $string['my_holder'] = 'PDF und Namensanzeige';
 $string['my_intro'] = 'Ihre Nachweise sind auf valid.at registriert. Zeigen Sie Code, QR-Code auf dem PDF oder den Link zur Prüfseite allen, die sie prüfen möchten.';
 $string['my_none'] = 'Sie haben noch keine Nachweise.';
+$string['my_notyet'] = 'Noch nicht ausgestellt';
 $string['my_verify'] = 'Prüfseite öffnen';
 $string['mycertificates'] = 'Meine Nachweise auf valid.at';
 $string['note'] = 'Zusatztext auf dem PDF';

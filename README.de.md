@@ -48,6 +48,12 @@ Moodle im Profil unter „Meine Nachweise auf valid.at“.
   - Liste aller Nachweise mit Stand und Code, der zur Prüfseite verlinkt.
   - Widerrufen mit Grund.
   - Nachweise für Abschlüsse aus der Zeit vor dem Einschalten ausstellen.
+- **Sichern und Wiederherstellen:**
+  - Kurssicherungen enthalten die Einstellungen. Beim Wiederherstellen in einen neuen Kurs und beim Duplizieren
+    bleiben sie erhalten.
+  - Sicherungen mit Nutzerdaten enthalten auch die Nachweise, anonymisierte nicht. Nach dem Wiederherstellen stehen
+    sie wieder im Kurs und werden daher nicht ein zweites Mal ausgestellt. Das Wiederherstellen sendet nichts an
+    valid.at.
 - **Rechte:**
   - Lehrende sehen die Liste (`local/validat:view`).
   - Einstellen, Widerrufen und Nachtragen dürfen standardmäßig nur Manager (`local/validat:manage`), weil es im Namen
@@ -67,4 +73,4 @@ Moodle im Profil unter „Meine Nachweise auf valid.at“.
 
 ## Lizenz
 
-GNU GPL v3 oder später, wie Moodle selbst.
+GNU GPL v3 oder später, wie Moodle selbst, siehe [LICENSE](LICENSE).

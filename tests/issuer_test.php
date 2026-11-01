@@ -246,4 +246,53 @@ final class issuer_test extends \advanced_testcase {
         delete_course($course, false);
         $this->assertFalse($DB->record_exists('local_validat_courses', ['courseid' => $course->id]));
     }
+
+    /**
+     * Whether the own profile shows "My certificates on valid.at".
+     *
+     * @param \stdClass $user Profile owner
+     * @param bool $iscurrentuser Whether it is the own profile
+     * @return bool
+     */
+    private function profile_has_link(\stdClass $user, bool $iscurrentuser = true): bool {
+        global $CFG;
+        require_once($CFG->dirroot . '/local/validat/lib.php');
+        $tree = new \core_user\output\myprofile\tree();
+        local_validat_myprofile_navigation($tree, $user, $iscurrentuser, null);
+        return array_key_exists('local_validat', $tree->nodes);
+    }
+
+    /**
+     * The own profile links to "My certificates on valid.at" for learners of courses with certificates and for everyone
+     * with a certificate, also one that is not issued yet.
+     */
+    public function test_profile_link(): void {
+        global $DB;
+        [$course, $user] = $this->course_with_learner(false);
+        $teacher = $this->getDataGenerator()->create_user();
+        $outsider = $this->getDataGenerator()->create_user();
+        $this->getDataGenerator()->enrol_user($teacher->id, $course->id, 'editingteacher');
+
+        // Course without certificates.
+        $this->assertFalse(issuer::in_profile($user->id));
+        $this->assertFalse($this->profile_has_link($user));
+
+        // Course with certificates: everyone enrolled, before any completion.
+        $DB->set_field('local_validat_courses', 'enabled', 1, ['courseid' => $course->id]);
+        $this->assertTrue($this->profile_has_link($user));
+        $this->assertTrue($this->profile_has_link($teacher));
+        $this->assertFalse($this->profile_has_link($user, false));
+        $this->assertFalse($this->profile_has_link($outsider));
+
+        // Suspended enrolments do not count.
+        $instance = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'manual'], '*', MUST_EXIST);
+        enrol_get_plugin('manual')->update_user_enrol($instance, $user->id, ENROL_USER_SUSPENDED);
+        $this->assertFalse(issuer::in_profile($user->id));
+
+        // A certificate, even one still waiting for the task, keeps the link after the course stops issuing.
+        $this->assertNotNull(issuer::queue($course->id, $user->id, self::COMPLETED));
+        $DB->set_field('local_validat_courses', 'enabled', 0, ['courseid' => $course->id]);
+        $this->assertTrue($this->profile_has_link($user));
+        $this->assertFalse($this->profile_has_link($teacher));
+    }
 }

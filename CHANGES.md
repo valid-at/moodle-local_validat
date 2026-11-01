@@ -1,5 +1,16 @@
 # Changes
 
+## 1.0.1 (2026-11-01)
+
+- Backup and restore: course backups include the settings of the plugin, so restoring into a new course and
+  duplicating a course keep them. Backups with users also include the certificates, except anonymised backups, so
+  restored completions are not issued a second time. A restore never sends anything to valid.at.
+- The plugin includes the license text in the file LICENSE.
+- "My certificates on valid.at" now appears in the own profile as soon as the learner is enrolled in a course that
+  issues certificates, or has a certificate, also one that is not issued yet. Before, it appeared only after the first
+  issued certificate.
+- The page lists completions whose certificate is not issued yet.
+
 ## 1.0.0 (2026-10-15)
 
 First stable release. Supports Moodle 4.1 to 5.3. Replaces the beta of 2026-10-02; there are no database changes, so

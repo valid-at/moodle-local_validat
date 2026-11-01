@@ -38,16 +38,15 @@ $PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('mycertificates', 'local_validat'));
 $PAGE->set_heading(fullname($USER));
 
-[$insql, $params] = $DB->get_in_or_equal([issuer::STATUS_ISSUED, issuer::STATUS_REVOKED], SQL_PARAMS_NAMED);
-$params['userid'] = $USER->id;
+// Also certificates that are not issued yet, so that a learner sees the completion right away.
 $records = $DB->get_records_sql(
     "SELECT i.id, i.courseid, i.timecompleted, i.status, i.code, i.verifyurl, i.holderurl, i.validuntil,
             i.revokereason, c.fullname AS coursename
        FROM {local_validat_issues} i
        JOIN {course} c ON c.id = i.courseid
-      WHERE i.userid = :userid AND i.status $insql
+      WHERE i.userid = :userid
    ORDER BY i.timecompleted DESC, i.id DESC",
-    $params
+    ['userid' => $USER->id]
 );
 
 echo $OUTPUT->header();
@@ -64,8 +63,12 @@ foreach ($records as $record) {
     $coursecontext = context_course::instance($record->courseid, IGNORE_MISSING);
     $title = format_string($record->coursename, true, ['context' => $coursecontext ?: $context]);
 
+    // Issued or revoked: the certificate exists on valid.at and has a code and a verification page.
+    $onvalidat = in_array($record->status, [issuer::STATUS_ISSUED, issuer::STATUS_REVOKED], true);
     $details = [get_string('my_completed', 'local_validat', userdate($record->timecompleted, $dateformat))];
-    if ($record->status === issuer::STATUS_REVOKED) {
+    if (!$onvalidat) {
+        $details[] = get_string('my_notyet', 'local_validat');
+    } else if ($record->status === issuer::STATUS_REVOKED) {
         $details[] = get_string('status_revoked', 'local_validat') .
             ($record->revokereason ? ': ' . s($record->revokereason) : '');
     } else if ($record->validuntil) {
@@ -74,12 +77,12 @@ foreach ($records as $record) {
     } else {
         $details[] = get_string('validity_none', 'local_validat');
     }
-    if ($record->code) {
+    if ($onvalidat && $record->code) {
         $details[] = get_string('code', 'local_validat') . ' ' . issuer::format_code($record->code);
     }
 
     $links = [];
-    if ($record->verifyurl) {
+    if ($onvalidat && $record->verifyurl) {
         $links[] = html_writer::link(
             $record->verifyurl,
             get_string('my_verify', 'local_validat') . $newwindow,

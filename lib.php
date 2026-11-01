@@ -44,7 +44,8 @@ function local_validat_extend_navigation_course(navigation_node $navigation, std
 }
 
 /**
- * Adds "My certificates on valid.at" to the own profile, once there is one.
+ * Adds "My certificates on valid.at" to the own profile of learners in courses with certificates and of everyone who has
+ * a certificate.
  *
  * @param core_user\output\myprofile\tree $tree Profile tree
  * @param stdClass $user Profile owner
@@ -52,16 +53,7 @@ function local_validat_extend_navigation_course(navigation_node $navigation, std
  * @param stdClass|null $course Course, if viewed in a course
  */
 function local_validat_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
-    global $DB;
-    if (!$iscurrentuser || isguestuser($user)) {
-        return;
-    }
-    [$insql, $params] = $DB->get_in_or_equal(
-        [\local_validat\issuer::STATUS_ISSUED, \local_validat\issuer::STATUS_REVOKED],
-        SQL_PARAMS_NAMED
-    );
-    $params['userid'] = $user->id;
-    if (!$DB->record_exists_select('local_validat_issues', "userid = :userid AND status $insql", $params)) {
+    if (!$iscurrentuser || isguestuser($user) || !\local_validat\issuer::in_profile($user->id)) {
         return;
     }
     $tree->add_node(new core_user\output\myprofile\node(

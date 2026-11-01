@@ -54,6 +54,10 @@ Deutsche Anleitung: [README.de.md](README.de.md)
   - All certificates with status and a link to the verification page.
   - Revoke with a reason.
   - Issue certificates for completions from before the course issued certificates.
+- **Backup and restore**
+  - Course backups include the settings. Restoring into a new course, and duplicating a course, keeps them.
+  - Backups with users also include the certificates, except anonymised ones. After a restore they appear in the
+    course again, so they are not issued a second time. A restore never sends anything to valid.at.
 - **Capabilities**
   - Teachers can view the list (`local/validat:view`).
   - Changing settings, revoking and issuing for past completions act in the name of the issuer. By default only
@@ -80,4 +84,4 @@ Deutsche Anleitung: [README.de.md](README.de.md)
 
 ## License
 
-GNU GPL v3 or later. Copyright 2026 dawox GmbH.
+GNU GPL v3 or later, see [LICENSE](LICENSE). Copyright 2026 dawox GmbH.

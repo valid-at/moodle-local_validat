@@ -216,6 +216,47 @@ class issuer {
     }
 
     /**
+     * Adds a record from a course backup. Nothing is sent to valid.at: the record stands for a certificate that exists
+     * there already, or for a request that a manager can try again on the course page.
+     *
+     * @param int $courseid Course the backup is restored into
+     * @param int $userid Learner on this site
+     * @param \stdClass $data Record from the backup
+     * @return int|null Id of the new record, null when the completion has a record already or the data is not valid
+     */
+    public static function restore_issue(int $courseid, int $userid, \stdClass $data): ?int {
+        global $DB;
+        $status = (string) ($data->status ?? '');
+        $timecompleted = (int) ($data->timecompleted ?? 0);
+        $code = (string) ($data->code ?? '');
+        $code = preg_match('/^[A-Z0-9]{8}$/', $code) ? $code : null;
+        if (!in_array($status, self::STATES, true) || $timecompleted <= 0) {
+            return null;
+        }
+        if (($status === self::STATUS_ISSUED || $status === self::STATUS_REVOKED) && $code === null) {
+            return null;
+        }
+        $completion = ['courseid' => $courseid, 'userid' => $userid, 'timecompleted' => $timecompleted];
+        if ($DB->record_exists('local_validat_issues', $completion)) {
+            return null;
+        }
+        $validuntil = (string) ($data->validuntil ?? '');
+        $now = time();
+        return (int) $DB->insert_record('local_validat_issues', (object) ($completion + [
+            'status' => $status,
+            'code' => $code,
+            'verifyurl' => self::web_url($data->verifyurl ?? null),
+            'holderurl' => self::web_url($data->holderurl ?? null),
+            'validuntil' => preg_match('/^\d{4}-\d{2}-\d{2}$/', $validuntil) ? $validuntil : null,
+            'attempts' => min(9999, max(0, (int) ($data->attempts ?? 0))),
+            'lasterror' => isset($data->lasterror) ? (string) $data->lasterror : null,
+            'revokereason' => isset($data->revokereason) ? \core_text::substr((string) $data->revokereason, 0, 300) : null,
+            'timecreated' => (int) ($data->timecreated ?? 0) ?: $now,
+            'timemodified' => (int) ($data->timemodified ?? 0) ?: $now,
+        ]));
+    }
+
+    /**
      * Sends the request for one completion to valid.at. Called by the task.
      *
      * @param int $issueid Record
@@ -335,6 +376,28 @@ class issuer {
             return trim(get_string('error_unreachable', 'local_validat') . ' ' . $e->getMessage());
         }
         return $e->describe();
+    }
+
+    /**
+     * Whether the own profile links to "My certificates on valid.at": the user has a certificate, also one that is not
+     * issued yet, or is enrolled in a course that issues certificates.
+     *
+     * @param int $userid User
+     * @return bool
+     */
+    public static function in_profile(int $userid): bool {
+        global $DB;
+        if ($DB->record_exists('local_validat_issues', ['userid' => $userid])) {
+            return true;
+        }
+        return $DB->record_exists_sql(
+            "SELECT 1
+               FROM {local_validat_courses} vc
+               JOIN {enrol} e ON e.courseid = vc.courseid AND e.status = :instanceenabled
+               JOIN {user_enrolments} ue ON ue.enrolid = e.id AND ue.status = :useractive
+              WHERE vc.enabled = 1 AND ue.userid = :userid",
+            ['instanceenabled' => ENROL_INSTANCE_ENABLED, 'useractive' => ENROL_USER_ACTIVE, 'userid' => $userid]
+        );
     }
 
     /**
